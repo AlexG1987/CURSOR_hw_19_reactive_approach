@@ -1,22 +1,20 @@
 package com.cursor.reactivetwitterintegrationclient.controller;
 
-import com.cursor.reactivetwitterintegrationclient.service.impl.TwitterServiceImpl;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
+import com.cursor.reactivetwitterintegrationclient.service.TwitterService;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
+import twitter4j.Status;
 
-@Controller
-@RequiredArgsConstructor
+@RestController
 public class TwitterController {
 
-    private final TwitterServiceImpl twitterServiceImpl;
-
-    @GetMapping("/")
-    public Flux<String> getTwitterTimeLine() {
-        Flux<String> tweets = Flux.just(twitterServiceImpl.showHomeTimeline(TwitterServiceImpl.getTwitterInstance()));
-        tweets.subscribe();
-        return tweets;
+    @GetMapping(path = "/feed", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> feed() {
+        ConnectableFlux<Status> flux = TwitterService.getTwitterStream();
+        return flux.map(status -> status.getText());
     }
 
 }
